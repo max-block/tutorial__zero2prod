@@ -18,7 +18,7 @@ services:
     # For production workloads we'd go for at least two!
     instance_count: 1
     # Let's keep the bill lean for now...
-    instance_size_slug: basic-xxs
+    instance_size_slug: basic-m
     # All incoming requests should be routed to our app
     routes:
       - path: /
