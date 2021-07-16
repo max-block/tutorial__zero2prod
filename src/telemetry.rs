@@ -1,9 +1,9 @@
-use tracing::{subscriber::set_global_default, Subscriber};
+use tracing::{Subscriber, subscriber::set_global_default};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_log::LogTracer;
-use tracing_subscriber::{fmt::MakeWriter, layer::SubscriberExt, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, fmt::MakeWriter, layer::SubscriberExt, Registry};
 
-pub fn get_subsriber(
+pub fn get_subscriber(
     name: String,
     env_filter: String,
     sink: impl MakeWriter + Send + Sync + 'static,
