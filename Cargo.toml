@@ -31,6 +31,8 @@ thiserror = "1.0.26"
 anyhow = "1.0.42"
 validator = "0.14.0"
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+rand = { version = "0.8", features=["std_rng"] }
+
 
 
 [dev-dependencies]
