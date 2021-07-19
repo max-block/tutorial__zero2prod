@@ -1,8 +1,8 @@
 use std::net::TcpListener;
 
-use actix_web::{dev::Server, web, App, HttpServer};
-use sqlx::postgres::PgPoolOptions;
+use actix_web::{App, dev::Server, HttpServer, web};
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::{DatabaseSettings, Settings};
@@ -49,6 +49,7 @@ pub fn run(
 ) -> Result<Server, std::io::Error> {
     let db_pool = web::Data::new(db_pool);
     let email_client = web::Data::new(email_client);
+    let base_url = web::Data::new(base_url);
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
@@ -57,7 +58,7 @@ pub fn run(
             .route("/subscriptions/confirm", web::get().to(confirm))
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
-            .app_data(web::Data::new(ApplicationBaseUrl(base_url.clone())))
+            .app_data(base_url.clone())
     })
     .listen(listener)?
     .run();

@@ -1,6 +1,6 @@
 use reqwest::Url;
-use wiremock::matchers::{method, path};
 use wiremock::{Mock, ResponseTemplate};
+use wiremock::matchers::{method, path};
 
 use crate::helpers::spawn_app;
 
@@ -104,4 +104,19 @@ async fn the_link_returned_by_subscribe_returns_a_200_if_called() {
     let confirmation_links = app.get_confirmation_links(email_request);
     let res = reqwest::get(confirmation_links.html).await.unwrap();
     assert_eq!(res.status().as_u16(), 200);
+}
+
+#[actix_rt::test]
+async fn subscribe_fails_if_there_is_a_database_error() {
+    // Arrange
+    let app = spawn_app().await;
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+    // Sabotage database
+    sqlx::query!("ALTER TABLE subscription_tokens DROP COLUMN subscription_token").execute(&app.db_pool).await.unwrap();
+
+    // Act
+    let res = app.post_subscriptions(body.into()).await;
+
+    // Asset
+    assert_eq!(res.status().as_u16(), 500);
 }
