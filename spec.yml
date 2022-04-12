@@ -7,7 +7,7 @@ services:
     github:
       branch: master
       deploy_on_push: true
-      repo: max-block/tutorial_zero2prod
+      repo: max-block/tutorial__zero2prod
     health_check:
       http_path: /health_check
     http_port: 8000
