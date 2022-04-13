@@ -1,3 +1,6 @@
+dev:
+    cargo run | bunyan
+
 start_docker:
     scripts/init_db.sh
 
