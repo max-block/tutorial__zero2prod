@@ -1,13 +1,12 @@
 use std::net::TcpListener;
 
 use once_cell::sync::Lazy;
-use secrecy::ExposeSecret;
-use sqlx::Executor;
 use sqlx::{Connection, PgConnection, PgPool};
+use sqlx::Executor;
 use uuid::Uuid;
 
 use zero2prod::{
-    configuration::{get_configuration, DatabaseSettings},
+    configuration::{DatabaseSettings, get_configuration},
     telemetry::{get_subscriber, init_subscriber},
 };
 
@@ -42,13 +41,13 @@ async fn spawn_app() -> TestApp {
 }
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
-    let mut conn = PgConnection::connect(&config.connection_string_without_db().expose_secret())
+    let mut conn = PgConnection::connect_with(&config.without_db())
         .await
         .expect("Failed to connect to Postgres.");
     let sql = format!(r#"CREATE DATABASE "{}";"#, config.database_name);
     conn.execute(sql.as_str()).await.expect("Failed to create database.");
 
-    let db_pool = PgPool::connect(&config.connection_string().expose_secret())
+    let db_pool = PgPool::connect_with(config.with_db())
         .await
         .expect("Failed to connect to Postgres.");
     sqlx::migrate!("./migrations")
@@ -74,11 +73,7 @@ async fn health_check_works() {
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
     let app = spawn_app().await;
-    let configuration = get_configuration().expect("Failed to read configuration");
-    let connection_string = configuration.database.connection_string();
-    let mut connection = PgConnection::connect(&connection_string.expose_secret())
-        .await
-        .expect("Failed to connect to Postgres.");
+
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let res = client
@@ -91,7 +86,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
     assert_eq!(res.status().as_u16(), 200);
     let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
-        .fetch_one(&mut connection)
+        .fetch_one(&app.db_pool)
         .await
         .expect("Failed to fetch saved subscription.");
     assert_eq!(saved.email, "ursula_le_guin@gmail.com");

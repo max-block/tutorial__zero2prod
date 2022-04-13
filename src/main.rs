@@ -1,8 +1,6 @@
 use std::net::TcpListener;
 use std::time::Duration;
 
-use secrecy::ExposeSecret;
-use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 
 use zero2prod::{
@@ -20,8 +18,7 @@ async fn main() -> std::io::Result<()> {
     let address = format!("{}:{}", configuration.application.host, configuration.application.port);
     let connection_pool = PgPoolOptions::new()
         .connect_timeout(Duration::from_secs(2))
-        .connect_lazy(&configuration.database.connection_string().expose_secret())
-        .unwrap();
+        .connect_lazy_with(configuration.database.with_db());
 
     run(TcpListener::bind(address)?, connection_pool)?.await
 }
