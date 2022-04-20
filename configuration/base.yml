@@ -10,3 +10,4 @@ email_client:
   base_url: "localhost"
   sender_email: "test@mail.com"
   authorization_token: "secret"
+  timeout_milliseconds: 10000

@@ -1,3 +1,5 @@
+extern crate core;
+
 pub mod configuration;
 mod domain;
 pub mod routes;

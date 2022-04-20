@@ -13,3 +13,6 @@ build-docker:
 
 sqlx-prepare:
     cargo sqlx prepare -- --lib
+
+db-migrate:
+    SKIP_DOCKER=true ./scripts/init_db.sh
