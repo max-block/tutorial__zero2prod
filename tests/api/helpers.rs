@@ -2,6 +2,8 @@ use once_cell::sync::Lazy;
 use sqlx::{Connection, PgConnection, PgPool};
 use sqlx::Executor;
 use uuid::Uuid;
+use wiremock::{Mock, MockServer, ResponseTemplate};
+use wiremock::matchers::{method, path};
 
 use zero2prod::{
     configuration::{DatabaseSettings, get_configuration},
@@ -24,6 +26,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
+    pub email_server: MockServer,
 }
 
 impl TestApp {
@@ -41,11 +44,15 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     Lazy::force(&TRACING);
 
+    // Launch a mock server to stand in for Postmark's API
+    let email_server = MockServer::start().await;
+
     // Randomise configuration to ensure test isolation
     let configuration = {
         let mut c = get_configuration().expect("Failed to read configuration.");
         // Use a different database for each test case
         c.database.database_name = Uuid::new_v4().to_string();
+        c.email_client.base_url = email_server.uri();
         // Use a random OS port
         c.application.port = 0;
         c
@@ -64,6 +71,7 @@ pub async fn spawn_app() -> TestApp {
 
     TestApp {
         address,
+        email_server,
         db_pool: get_connection_pool(&configuration.database),
     }
 }
@@ -83,4 +91,21 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to migrate the database");
     db_pool
+}
+
+#[tokio::test]
+async fn subscribe_sends_a_confirmation_email_for_valid_data() {
+    // Arrange
+    let app = spawn_app().await;
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+    // Act
+    app.post_subscriptions(body.into()).await;
+    // Assert
+    // Mock asserts on drop
 }
