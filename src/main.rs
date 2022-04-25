@@ -1,8 +1,8 @@
+use zero2prod::startup::Application;
 use zero2prod::{
     configuration::get_configuration,
     telemetry::{get_subscriber, init_subscriber},
 };
-use zero2prod::startup::Application;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {

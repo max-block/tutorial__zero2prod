@@ -24,7 +24,7 @@ impl EmailClient {
 
     pub async fn send_email(
         &self,
-        recipient: SubscriberEmail,
+        recipient: &SubscriberEmail,
         subject: &str,
         html_content: &str,
         text_content: &str,
@@ -64,12 +64,12 @@ mod test {
     use std::time::Duration;
 
     use claim::{assert_err, assert_ok};
-    use fake::{Fake, Faker};
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
+    use fake::{Fake, Faker};
     use secrecy::Secret;
-    use wiremock::{matchers::any, Mock, MockServer, Request, ResponseTemplate};
     use wiremock::matchers::{header, header_exists, method, path};
+    use wiremock::{matchers::any, Mock, MockServer, Request, ResponseTemplate};
 
     use crate::domain::SubscriberEmail;
     use crate::email_client::EmailClient;
@@ -108,7 +108,7 @@ mod test {
             .await;
 
         // Act
-        let _ = email_client.send_email(email(), &subject(), &content(), &content()).await;
+        let _ = email_client.send_email(&email(), &subject(), &content(), &content()).await;
 
         // Assert
     }
@@ -126,7 +126,7 @@ mod test {
             .await;
 
         // Act
-        let outcome = email_client.send_email(email(), &subject(), &content(), &content()).await;
+        let outcome = email_client.send_email(&email(), &subject(), &content(), &content()).await;
 
         // Assert
         assert_ok!(outcome);
@@ -144,7 +144,7 @@ mod test {
             .mount(&mock_server)
             .await;
         // Act
-        let outcome = email_client.send_email(email(), &subject(), &content(), &content()).await;
+        let outcome = email_client.send_email(&email(), &subject(), &content(), &content()).await;
         // Assert
         assert_err!(outcome);
     }
@@ -159,7 +159,7 @@ mod test {
             .set_delay(std::time::Duration::from_secs(180));
         Mock::given(any()).respond_with(response).expect(1).mount(&mock_server).await;
         // Act
-        let outcome = email_client.send_email(email(), &subject(), &content(), &content()).await;
+        let outcome = email_client.send_email(&email(), &subject(), &content(), &content()).await;
         // Assert
         assert_err!(outcome);
     }
