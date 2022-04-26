@@ -1,5 +1,6 @@
 extern crate core;
 
+pub mod authentication;
 pub mod configuration;
 mod domain;
 pub mod email_client;

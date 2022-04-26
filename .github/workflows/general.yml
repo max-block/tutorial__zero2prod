@@ -1,16 +1,13 @@
 name: Rust
 
 on:
-  # NB: this differs from the book's project!
-  # These settings allow us to run this specific CI pipeline for PRs against
-  # this specific branch (a.k.a. book chapter).
   push:
     branches:
-      - root-chapter-03-part1
+      - master
   pull_request:
     types: [ opened, synchronize, reopened ]
     branches:
-      - root-chapter-03-part1
+      - master
 
 env:
   CARGO_TERM_COLOR: always
@@ -28,6 +25,10 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
     env:
       SQLX_VERSION: 0.5.5
       SQLX_FEATURES: postgres
@@ -166,6 +167,10 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
     env:
       SQLX_VERSION: 0.5.5
       SQLX_FEATURES: postgres
