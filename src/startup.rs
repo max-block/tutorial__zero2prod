@@ -1,19 +1,23 @@
 use std::net::TcpListener;
 
-use actix_session::{storage::RedisSessionStore, SessionMiddleware};
-use actix_web::{cookie::Key, dev::Server, web, App, HttpServer};
-use actix_web_flash_messages::{storage::CookieMessageStore, FlashMessagesFramework};
+use actix_session::{SessionMiddleware, storage::RedisSessionStore};
+use actix_web::{App, cookie::Key, dev::Server, HttpServer, web};
+use actix_web_flash_messages::{FlashMessagesFramework, storage::CookieMessageStore};
+use actix_web_lab::middleware::from_fn;
 use secrecy::{ExposeSecret, Secret};
-use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{admin_dashboard, confirm, health_check, login, publish_newsletter, subscribe};
 use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::home,
 };
 use crate::{email_client::EmailClient, routes::login_form};
+use crate::authentication::reject_anonymous_users;
+use crate::routes::{
+    admin_dashboard, change_password, change_password_form, confirm, health_check, log_out, login, publish_newsletter, subscribe,
+};
 
 pub struct Application {
     port: u16,
@@ -84,7 +88,14 @@ async fn run(
             .route("/login", web::get().to(login_form))
             .route("/login", web::post().to(login))
             .route("/", web::get().to(home))
-            .route("/admin/dashboard", web::get().to(admin_dashboard))
+            .service(
+                web::scope("/admin")
+                    .wrap(from_fn(reject_anonymous_users))
+                    .route("/dashboard", web::get().to(admin_dashboard))
+                    .route("/password", web::get().to(change_password_form))
+                    .route("/password", web::post().to(change_password))
+                    .route("/logout", web::post().to(log_out)),
+            )
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())

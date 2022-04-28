@@ -1,10 +1,10 @@
-use actix_session::Session;
-use uuid::Uuid;
-
-use actix_session::SessionExt;
-use actix_web::dev::Payload;
-use actix_web::{FromRequest, HttpRequest};
 use std::future::{ready, Ready};
+
+use actix_session::Session;
+use actix_session::SessionExt;
+use actix_web::{FromRequest, HttpRequest};
+use actix_web::dev::Payload;
+use uuid::Uuid;
 
 pub struct TypedSession(Session);
 
@@ -18,6 +18,9 @@ impl TypedSession {
     }
     pub fn get_user_id(&self) -> Result<Option<Uuid>, serde_json::Error> {
         self.0.get(Self::USER_ID_KEY)
+    }
+    pub fn log_out(self) {
+        self.0.purge()
     }
 }
 

@@ -1,5 +1,5 @@
 dev:
-    cargo run | bunyan
+    cargo watch -x run | bunyan
 
 start_docker:
     scripts/init_db.sh

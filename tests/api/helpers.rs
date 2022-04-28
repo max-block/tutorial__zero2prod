@@ -1,16 +1,15 @@
-use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, PasswordHasher, Version};
+use argon2::{Algorithm, Argon2, Params, password_hash::SaltString, PasswordHasher, Version};
 use once_cell::sync::Lazy;
-use sqlx::Executor;
 use sqlx::{Connection, PgConnection, PgPool};
+use sqlx::Executor;
 use uuid::Uuid;
-
 use wiremock::MockServer;
 
-use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::{
-    configuration::{get_configuration, DatabaseSettings},
+    configuration::{DatabaseSettings, get_configuration},
     telemetry::{get_subscriber, init_subscriber},
 };
+use zero2prod::startup::{Application, get_connection_pool};
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
@@ -40,6 +39,38 @@ pub struct TestApp {
 }
 
 impl TestApp {
+    pub async fn post_logout(&self) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/admin/logout", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn post_change_password<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/admin/password", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_change_password(&self) -> reqwest::Response {
+        self.api_client
+            .get(&format!("{}/admin/password", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_change_password_html(&self) -> String {
+        self.get_change_password().await.text().await.unwrap()
+    }
+
     pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
         self.api_client
             .post(&format!("{}/subscriptions", &self.address))

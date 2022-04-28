@@ -30,7 +30,6 @@ impl EmailClient {
         text_content: &str,
     ) -> Result<(), reqwest::Error> {
         let url = format!("{}/email", self.base_url);
-        dbg!(&url);
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
@@ -64,12 +63,12 @@ mod test {
     use std::time::Duration;
 
     use claim::{assert_err, assert_ok};
+    use fake::{Fake, Faker};
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::{Paragraph, Sentence};
-    use fake::{Fake, Faker};
     use secrecy::Secret;
-    use wiremock::matchers::{header, header_exists, method, path};
     use wiremock::{matchers::any, Mock, MockServer, Request, ResponseTemplate};
+    use wiremock::matchers::{header, header_exists, method, path};
 
     use crate::domain::SubscriberEmail;
     use crate::email_client::EmailClient;

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.0.1"
+actix-web-lab = "0.15"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
 config = "0.11"
