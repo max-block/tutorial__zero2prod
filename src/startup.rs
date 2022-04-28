@@ -8,7 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{confirm, health_check, login, publish_newsletter, subscribe, admin_dashboard};
+use crate::routes::{admin_dashboard, confirm, health_check, login, publish_newsletter, subscribe};
 use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::home,
